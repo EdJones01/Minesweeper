@@ -15,7 +15,7 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener {
     public static final String EXPERT = "40_250";
 
     private final Color[] textColors = {getBackground(), Color.blue, Color.green.darker(), Color.red,
-            Color.blue.darker(), Color.red.darker()};
+            Color.blue.darker(), Color.red.darker(), new Color(0, 127, 127), Color.black, Color.gray};
 
     private int numberOfBombs;
     private int gridSize;
