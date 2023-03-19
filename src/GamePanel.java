@@ -37,10 +37,11 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener {
 
     public void loadResources() {
         tileSize = getWidth() / gridSize;
-        System.out.println(tileSize);
         try {
-            bombImage = Tools.resizeBufferedImage(Tools.loadBufferedImage("bomb.png"), tileSize, tileSize);
-            flagImage = Tools.resizeBufferedImage(Tools.loadBufferedImage("flag.png"), tileSize, tileSize);
+            bombImage = Tools.resizeBufferedImage(ImageIO.read(getClass().getResource("/resources/bomb.png")),
+                    tileSize, tileSize);
+            flagImage = Tools.resizeBufferedImage(ImageIO.read(getClass().getResource("/resources/flag.png")),
+                    tileSize, tileSize);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
