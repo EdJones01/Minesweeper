@@ -11,10 +11,10 @@ public class MinesweeperMenuBar extends JMenuBar {
         this.addDifficultyButton("Expert", GamePanel.EXPERT, actionListener);
     }
 
-    private void addDifficultyButton(String name, int cmd, ActionListener actionListener) {
+    private void addDifficultyButton(String name, String cmd, ActionListener actionListener) {
         JButton button = new JButton(name);
         button.addActionListener(actionListener);
-        button.setActionCommand("" + cmd);
+        button.setActionCommand(cmd);
         button.setFocusable(false);
         this.add(button);
         this.addGap(5);

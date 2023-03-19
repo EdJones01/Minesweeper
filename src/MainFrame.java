@@ -11,6 +11,5 @@ public class MainFrame extends JFrame{
         setContentPane(panel);
         pack();
         setLocationRelativeTo(null);
-        panel.loadResources();
     }
 }

@@ -8,38 +8,34 @@ import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-public class GamePanel extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
-    public static final int EASY = 4;
-    public static final int MEDIUM = 7;
-    public static final int HARD = 10;
-    public static final int EXPERT = 16;
+public class GamePanel extends JPanel implements ActionListener, MouseListener {
+    public static final String EASY = "10_10";
+    public static final String MEDIUM = "20_40";
+    public static final String HARD = "30_100";
+    public static final String EXPERT = "40_250";
 
     private final Color[] textColors = {getBackground(), Color.blue, Color.green.darker(), Color.red,
             Color.blue.darker(), Color.red.darker()};
 
-    private Point mouseLocation = new Point(0, 0);
+    private int numberOfBombs;
+    private int gridSize;
 
     private BufferedImage bombImage;
     private BufferedImage flagImage;
 
     private final Random random = new Random();
-    private int gridSize = 30;
-    private double percentageAreBombs = EASY;
-    private int numberOfBombs = (int) ((gridSize * gridSize) * (percentageAreBombs / 100));
 
-    private Tile[][] grid = new Tile[gridSize][gridSize];
+    private Tile[][] grid;
     private int tileSize;
     private boolean gameOver = false;
 
     public GamePanel() {
         addMouseListener(this);
-        addMouseMotionListener(this);
 
-        setupGame(EASY);
+        setupGame("10_1");
     }
 
     public void loadResources() {
-
         tileSize = getWidth() / gridSize;
         System.out.println(tileSize);
         try {
@@ -50,9 +46,10 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
         }
     }
 
-    private void setupGame(int difficulty) {
-        percentageAreBombs = difficulty;
-        numberOfBombs = (int) ((gridSize * gridSize) * (percentageAreBombs / 100));
+    private void setupGame(String difficulty) {
+        gridSize = Integer.parseInt(difficulty.split("_")[0]);
+        numberOfBombs = Integer.parseInt(difficulty.split("_")[1]);
+        grid = new Tile[gridSize][gridSize];
         generateGrid();
         gameOver = false;
         repaint();
@@ -101,9 +98,8 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
         Graphics2D g2 = (Graphics2D) graphics;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-
         tileSize = getWidth() / gridSize;
-        g2.setFont(getFont().deriveFont(Font.BOLD));
+        g2.setFont(getFont().deriveFont(Font.BOLD, (int) (tileSize*0.8)));
 
         for (int i = 0; i < gridSize; i++) {
             for (int j = 0; j < gridSize; j++) {
@@ -112,7 +108,7 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
                     g2.setColor(getBackground().brighter());
                     g2.fill3DRect(tile.getX() * tileSize, tile.getY() * tileSize,
                             tileSize, tileSize, true);
-                    if(tile.isFlag())
+                    if (tile.isFlag())
                         g2.drawImage(flagImage, tile.getX() * tileSize, tile.getY() * tileSize, null);
                 } else {
                     g2.setColor(getBackground().brighter());
@@ -133,6 +129,20 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
 
             }
         }
+
+        if (gameOver)
+            drawGameOverScreen(g2);
+    }
+
+    private void drawGameOverScreen(Graphics2D g2) {
+        g2.setColor(new Color(255, 255, 255, 150));
+        g2.fillRect(0, 0, getWidth(), getHeight());
+        g2.setColor(getBackground());
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 40f));
+        String text = "You Lose.";
+        if(checkWin())
+            text = "You Win!";
+        Tools.centerString(g2, getBounds(), text);
     }
 
     private void revealAdjacentTiles(Tile tile) {
@@ -144,9 +154,13 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
             try {
                 Tile adjacentTile = grid[y][x];
                 if (!adjacentTile.isShown()) {
-                    if(!adjacentTile.isBomb()) {
+                    if (!adjacentTile.isFlag()) {
                         adjacentTile.setShown(true);
-                        if (adjacentTile.getValue() == 0){
+                        if(adjacentTile.isBomb()) {
+                            gameOver();
+                        }
+
+                        if (adjacentTile.getValue() == 0) {
                             revealAdjacentTiles(adjacentTile);
                         }
                     }
@@ -156,6 +170,31 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
         }
     }
 
+    private void gameOver() {
+        gameOver = true;
+        revealMines();
+    }
+
+    private boolean checkWin() {
+        int count = 0;
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                if(grid[i][j].isBomb() && grid[i][j].isFlag())
+                    count++;
+            }
+        }
+        if(count == numberOfBombs)
+            return true;
+
+        count = 0;
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                if(!grid[i][j].isBomb() && grid[i][j].isShown())
+                    count++;
+            }
+        }
+        return count == gridSize * gridSize - numberOfBombs;
+    }
 
     private Tile getTile(int x, int y) {
         return grid[y][x];
@@ -198,37 +237,23 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        setupGame(Integer.parseInt(e.getActionCommand()));
+        setupGame(e.getActionCommand());
+        loadResources();
         repaint();
     }
 
     @Override
-    public void mouseDragged(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        mouseLocation = new Point(e.getX(), e.getY());
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-
-    }
-
-    @Override
     public void mousePressed(MouseEvent e) {
-        if(gameOver)
+        if (gameOver)
             return;
+        gameOver = checkWin();
         Tile pressedTile = getTile(e);
-        if (pressedTile.isFlag()) {
-            return;
-        }
         if (SwingUtilities.isLeftMouseButton(e)) {
+            if (pressedTile.isFlag()) {
+                return;
+            }
             if (pressedTile.isBomb()) {
-                gameOver = true;
-                revealMines();
+                gameOver();
             } else {
                 revealTile(pressedTile);
             }
@@ -237,12 +262,11 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
             pressedTile.setFlag(!pressedTile.isFlag());
         }
         if (SwingUtilities.isMiddleMouseButton(e) && pressedTile.isShown()) {
+
             revealAdjacentTiles(pressedTile);
             repaint();
         }
         repaint();
-        if(gameOver)
-            JOptionPane.showMessageDialog(this, "Game over");
     }
 
     @Override
@@ -257,6 +281,11 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
 
     @Override
     public void mouseExited(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
 
     }
 }
