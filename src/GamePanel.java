@@ -32,7 +32,7 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener {
     public GamePanel() {
         addMouseListener(this);
 
-        setupGame("10_1");
+        setupGame("10_4");
     }
 
     public void loadResources() {
@@ -138,11 +138,9 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener {
         g2.setColor(new Color(255, 255, 255, 150));
         g2.fillRect(0, 0, getWidth(), getHeight());
         g2.setColor(getBackground());
-        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 40f));
-        String text = "You Lose.";
-        if(checkWin())
-            text = "You Win!";
-        Tools.centerString(g2, getBounds(), text);
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, getWidth()/25));
+        Tools.centerString(g2, getBounds(), checkWin() ?
+                "Congratulations, you won!" : "Game over! Better luck next time.");
     }
 
     private void revealAdjacentTiles(Tile tile) {
@@ -246,7 +244,6 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener {
     public void mousePressed(MouseEvent e) {
         if (gameOver)
             return;
-        gameOver = checkWin();
         Tile pressedTile = getTile(e);
         if (SwingUtilities.isLeftMouseButton(e)) {
             if (pressedTile.isFlag()) {
@@ -262,10 +259,10 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener {
             pressedTile.setFlag(!pressedTile.isFlag());
         }
         if (SwingUtilities.isMiddleMouseButton(e) && pressedTile.isShown()) {
-
             revealAdjacentTiles(pressedTile);
-            repaint();
         }
+        if(!gameOver)
+            gameOver = checkWin();
         repaint();
     }
 

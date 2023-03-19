@@ -10,6 +10,7 @@ public class MainFrame extends JFrame{
         panel.setPreferredSize(new Dimension(600, 600));
         setContentPane(panel);
         pack();
+        setResizable(false);
         setLocationRelativeTo(null);
     }
 }
